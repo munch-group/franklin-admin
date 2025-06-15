@@ -7,7 +7,7 @@ from pathlib import Path, PurePosixPath, PureWindowsPath
 from typing import Tuple, List, Dict, Callable, Any
 import requests
 
-from franklin.crash import crash_report
+from franklin import crash
 from franklin import config as cfg
 from franklin import utils
 from franklin import terminal as term
@@ -300,7 +300,7 @@ def grant():
 @click.option('--user', prompt=True, help='Admin user')
 @click.option('--password', prompt=True, hide_input=True, help='Admin password')
 @click.option('--course', '-c', required=False, help='Course name')
-@crash_report
+@crash.crash_report
 @git.gitlab_ssh_access
 def grant_ta_role(user_name, user, password, course=None):
     """Grant guest permissions to a user (read only).
@@ -316,7 +316,7 @@ def grant_ta_role(user_name, user, password, course=None):
 @click.option('--user', prompt=True, help='Admin user')
 @click.option('--password', prompt=True, hide_input=True, help='Admin password')
 @click.option('--course', '-c', required=False, help='Course name')
-@crash_report
+@crash.crash_report
 @git.gitlab_ssh_access
 def grant_ta_role(user_name, user, password, course=None):
     """Grant TA permissions to a user.
@@ -332,7 +332,7 @@ def grant_ta_role(user_name, user, password, course=None):
 @click.option('--user', prompt=True, help='Admin user')
 @click.option('--password', prompt=True, hide_input=True, help='Admin password')
 @click.option('--course', '-c', required=False, help='Course name')
-@crash_report
+@crash.crash_report
 @git.gitlab_ssh_access
 def grant_prof_role(user_name, user, password, course=None):
     """Grant course responsible permissions to a user.
@@ -348,7 +348,7 @@ def grant_prof_role(user_name, user, password, course=None):
 # @click.option('--password', prompt=True, hide_input=True,
 #               confirmation_prompt=False, help='Admin password')
 # @click.option('course', '--course', '-c', required=False, help='Course name')
-# @crash_report
+# @crash.crash_report
 # @git.gitlab_ssh_access
 # def grant_admin_role(user, password, course=None):
 #     """Grant admin permissions to a user.
