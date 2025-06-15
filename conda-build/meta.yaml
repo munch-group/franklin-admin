@@ -32,7 +32,6 @@ requirements:
     - python
     - pip
   run:  # your library dependencies
-    - munch-group::franklin-educator # add as conda dependency
     {% for dep in pyproject.get("project").get("dependencies") %}
     - {{ dep.lower() }}
     {% endfor %}  
