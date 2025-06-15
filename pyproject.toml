@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "franklin-admin"
-version = '0.1.19'
+version = '0.1.20'
 classifiers = [
   "Development Status :: 5 - Beta",
   "Intended Audience :: Education",
@@ -57,7 +57,7 @@ where = ["src"]
 [project.entry-points."franklin.plugins"]
 password = "franklin_admin.users:password"
 token = "franklin_admin.users:token"
-find = "franklin_admin.users:find"
+finger = "franklin_admin.users:finger"
 grant = "franklin_admin.users:grant"
 
 # [project.entry-points."franklin.plugins"]

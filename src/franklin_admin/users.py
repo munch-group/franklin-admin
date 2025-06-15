@@ -206,7 +206,7 @@ def token():
 def set_token(user, password, api_token):
     """Stores an encrypted token for the user.
     """
-    encrypt.encrypt(user, password, api_token, "token.json")
+    encrypt.store_encrypted_token(user, password, api_token, "token.json")
 
 
 @token.command('get')
@@ -215,7 +215,7 @@ def set_token(user, password, api_token):
 def get_token(user, password):
     """Stores an encrypted token for the user.
     """
-    api_token = encrypt.decrypt(user, password, "token.json")
+    api_token = encrypt.decrypt_token(user, password, "token.json")
     term.echo(f'Stored personal access token: {api_token}')
 
 
@@ -230,11 +230,11 @@ def get_token(user, password):
 
 
 
-@click.command('find')
+@click.command()
 @click.option('--user', prompt=True, help='User name')
 @click.option('--password', prompt=True, hide_input=True, help='Password')
 @click.argument("query", nargs=-1)
-def find_users(query, user, password):
+def finger(query, user, password):
     """Find users in GitLab by name.
     """
     api_token = encrypt.get_api_token(user, password)
