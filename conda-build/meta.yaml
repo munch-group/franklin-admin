@@ -32,13 +32,14 @@ requirements:
     - python
     - pip
   run:  # your library dependencies
+    - franklin
     {% for dep in pyproject.get("project").get("dependencies") %}
     - {{ dep.lower() }}
     {% endfor %}  
 
-channels:  # channels for your library dependencies
-  - conda-forge
-  - munch-group
+# channels:  # channels for your library dependencies
+#   - conda-forge
+#   - munch-group
 
 dependencies:   # keep this block with only these packages
   - anaconda-client
