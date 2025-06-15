@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "franklin-admin"
-version = '0.1.8'
+version = '0.1.9'
 classifiers = [
   "Development Status :: 5 - Beta",
   "Intended Audience :: Education",
@@ -55,7 +55,10 @@ Issues = "https://github.com/munch-group/franklin-admin/issues"
 where = ["src"]
 
 [project.entry-points."franklin.plugins"]
-admin = "franklin_admin.users:admin"
+password = "franklin_admin.users:password"
+token = "franklin_admin.users:token"
+find = "franklin_admin.users:find"
+grant = "franklin_admin.users:grant"
 
 # [project.entry-points."franklin.plugins"]
 # create = "franklin_admin.git:create_exercise"

@@ -7,6 +7,7 @@ from pathlib import Path, PurePosixPath, PureWindowsPath
 from typing import Tuple, List, Dict, Callable, Any
 import requests
 
+from franklin.crash import crash_report
 from franklin import config as cfg
 from franklin import utils
 from franklin import terminal as term
@@ -147,13 +148,13 @@ def create_impersonation_token(user_id: int, token_name: str, admin_api_token: s
         print(f"Error: {response.status_code} - {response.text}")
 
 
+# @click.group(cls=utils.AliasedGroup)
+# def admin():
+#     """Admin commands for access control.
+#     """
+
+
 @click.group(cls=utils.AliasedGroup)
-def admin():
-    """Admin commands for access control.
-    """
-
-
-@admin.group(cls=utils.AliasedGroup)
 def password():
     """Admin commands for admin tokens.
     """
@@ -173,7 +174,7 @@ def set_password(admin, admin_password, user):
 
 
 
-    encrypt.encrypt(user, user_password, 
+    encrypt.encrypt(user, admin_password, 
                     admin_passwords={
                         admin: admin_password
                         }
@@ -192,7 +193,7 @@ def set_password(admin, admin_password, user):
 
 
 
-@admin.group(cls=utils.AliasedGroup)
+@click.group(cls=utils.AliasedGroup)
 def token():
     """Admin commands for admin tokens.
     """
@@ -229,7 +230,7 @@ def get_token(user, password):
 
 
 
-@admin.command('find')
+@click.command('find')
 @click.option('--user', prompt=True, help='User name')
 @click.option('--password', prompt=True, hide_input=True, help='Password')
 @click.argument("query", nargs=-1)
@@ -288,7 +289,7 @@ def find_users(query, user, password):
     term.echo()
 
 
-@admin.group(cls=utils.AliasedGroup)
+@click.group(cls=utils.AliasedGroup)
 def grant():
     """Commands for granting/revoking user permissions.
     """
