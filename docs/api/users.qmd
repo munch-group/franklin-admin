@@ -1,0 +1,91 @@
+# users { #franklin_admin.users }
+
+`franklin_admin.users`
+
+
+
+## Functions
+
+| Name | Description |
+| --- | --- |
+| [admin](#franklin_admin.users.admin) | Admin commands for access control. |
+| [find_users](#franklin_admin.users.find_users) | Find users in GitLab by name. |
+| [get_token](#franklin_admin.users.get_token) | Stores an encrypted token for the user. |
+| [grant](#franklin_admin.users.grant) | Commands for granting/revoking user permissions. |
+| [grant_prof_role](#franklin_admin.users.grant_prof_role) | Grant course responsible permissions to a user. |
+| [grant_ta_role](#franklin_admin.users.grant_ta_role) | Grant TA permissions to a user. |
+| [password](#franklin_admin.users.password) | Admin commands for admin tokens. |
+| [set_token](#franklin_admin.users.set_token) | Stores an encrypted token for the user. |
+| [token](#franklin_admin.users.token) | Admin commands for admin tokens. |
+
+### admin { #franklin_admin.users.admin }
+
+```python
+franklin_admin.users.admin()
+```
+
+Admin commands for access control.
+
+### find_users { #franklin_admin.users.find_users }
+
+```python
+franklin_admin.users.find_users(query, user, password)
+```
+
+Find users in GitLab by name.
+
+### get_token { #franklin_admin.users.get_token }
+
+```python
+franklin_admin.users.get_token(user, password)
+```
+
+Stores an encrypted token for the user.
+
+### grant { #franklin_admin.users.grant }
+
+```python
+franklin_admin.users.grant()
+```
+
+Commands for granting/revoking user permissions.
+
+### grant_prof_role { #franklin_admin.users.grant_prof_role }
+
+```python
+franklin_admin.users.grant_prof_role(user_name, user, password, course=None)
+```
+
+Grant course responsible permissions to a user.
+
+### grant_ta_role { #franklin_admin.users.grant_ta_role }
+
+```python
+franklin_admin.users.grant_ta_role(user_name, user, password, course=None)
+```
+
+Grant TA permissions to a user.
+
+### password { #franklin_admin.users.password }
+
+```python
+franklin_admin.users.password()
+```
+
+Admin commands for admin tokens.
+
+### set_token { #franklin_admin.users.set_token }
+
+```python
+franklin_admin.users.set_token(user, password, api_token)
+```
+
+Stores an encrypted token for the user.
+
+### token { #franklin_admin.users.token }
+
+```python
+franklin_admin.users.token()
+```
+
+Admin commands for admin tokens.

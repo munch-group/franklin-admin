@@ -1,0 +1,9 @@
+website:
+  sidebar:
+  - contents:
+    - api/index.qmd
+    - contents:
+      - api/users.qmd
+      section: Jupyter
+    id: api
+  - id: dummy-sidebar

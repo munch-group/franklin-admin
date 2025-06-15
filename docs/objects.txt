@@ -1,0 +1,14 @@
+# Sphinx inventory version 2
+# Project: franklin
+# Version: 0.0.9999
+# The remainder of this file is compressed using zlib.
+franklin_admin.users.admin py:function 1 api/users.html#franklin_admin.users.admin -
+franklin_admin.users.find_users py:function 1 api/users.html#franklin_admin.users.find_users -
+franklin_admin.users.get_token py:function 1 api/users.html#franklin_admin.users.get_token -
+franklin_admin.users.grant py:function 1 api/users.html#franklin_admin.users.grant -
+franklin_admin.users.grant_prof_role py:function 1 api/users.html#franklin_admin.users.grant_prof_role -
+franklin_admin.users.grant_ta_role py:function 1 api/users.html#franklin_admin.users.grant_ta_role -
+franklin_admin.users.password py:function 1 api/users.html#franklin_admin.users.password -
+franklin_admin.users.set_token py:function 1 api/users.html#franklin_admin.users.set_token -
+franklin_admin.users.token py:function 1 api/users.html#franklin_admin.users.token -
+franklin_admin.users py:module 1 api/users.html#franklin_admin.users -

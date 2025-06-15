@@ -1,0 +1,10 @@
+# Function reference {.doc .doc-index}
+
+## Jupyter
+
+Some description...
+
+
+| | |
+| --- | --- |
+| [users](users.qmd#franklin_admin.users) |  |
