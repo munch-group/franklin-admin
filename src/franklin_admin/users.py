@@ -118,7 +118,7 @@ def update_permissions(user_name, role, course, listed_course_name, user, passwo
     # })
 
 
-# clone password repo into franklin-educator/data/passwords dir and sync that way
+# clone password repo into franklin-admin/data/passwords dir and sync that way
 # call th password  repo _passwords and skip all 
 
 # add three levels of access: admin, vip, ta

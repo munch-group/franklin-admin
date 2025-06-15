@@ -14,11 +14,11 @@
 #     {% endfor %}
 
 package:
-  name: franklin-educator
+  name: franklin-admin
   version: {{ pyproject.get("project").get("version") }}
 
 source:
-  git_url: https://github.com/munch-group/franklin-educator.git
+  git_url: https://github.com/munch-group/franklin-admin.git
 
 build:
   number: 0
@@ -32,7 +32,7 @@ requirements:
     - python
     - pip
   run:  # your library dependencies
-    - franklin-educator # add franklin-educator as conda dependency
+    - franklin-admin # add franklin-admin as conda dependency
     {% for dep in pyproject.get("project").get("dependencies") %}
     - {{ dep.lower() }}
     {% endfor %}  
@@ -54,7 +54,7 @@ test:
     - franklin_admin
 
 about:
-  home: https://github.com/munch-group/franklin-educator.git
+  home: https://github.com/munch-group/franklin-admin.git
   license: MIT
-  dev_url: https://github.com/munch-group/franklin-educator.git
-  doc_url: https://munch-group.org/franklin-educator
+  dev_url: https://github.com/munch-group/franklin-admin.git
+  doc_url: https://munch-group.org/franklin-admin

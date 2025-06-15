@@ -37,7 +37,7 @@ interlinks:
     #   inv: objects-test.txt
 
 website:
-  title: "franklin-educator"
+  title: "franklin-admin"
   page-navigation: true
   navbar:
     left:
@@ -47,7 +47,7 @@ website:
         text: API reference
     right:
       - icon: github
-        href: https://github.com/munch-group/franklin-educator/
+        href: https://github.com/munch-group/franklin-admin/
   sidebar:
     - id: pages
       title: Get Started
