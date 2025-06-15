@@ -14,7 +14,7 @@ from franklin import terminal as term
 from franklin import gitlab
 from franklin.logger import logger
 from . import encrypt
-from . import git
+from franklin_educator import git
 
 from rapidfuzz import process, fuzz
 import unicodedata
