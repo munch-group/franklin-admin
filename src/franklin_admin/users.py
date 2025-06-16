@@ -171,11 +171,25 @@ def password():
 @click.argument("password")
 @click.option('--admin', prompt=True, help='User name')
 @click.option('--password', prompt=True, hide_input=True, help='Password')
-def set_password(user, password, admin, admin_password, ):
+def set_password(user, password, admin, admin_password):
     admin_api_token = encrypt.get_api_token(admin, admin_password)
     user_id = gitlab.get_user_id(user, admin_api_token)
     user_api_token = create_impersonation_token(user_id, admin_api_token)
     encrypt.store_encrypted_token(user, password, user_api_token)
+
+@password.command('change')
+@click.option('--user', prompt=True, help='User name')
+@click.option('--password', prompt=True, hide_input=True, help='Password')
+@click.option('--new-password', prompt=True, hide_input=True, help='New password')
+@click.option('--new-password-repeat', prompt=True, hide_input=True, help='New password repeated')
+def change_password(user, password, new_password, new_password_repeat):
+    if new_password != new_password_repeat:
+        term.secho("New passwords do not match. Password not changed.")
+        click.Abort()
+    api_token = encrypt.get_api_token(user, password)
+    encrypt.store_encrypted_token(user, new_password, api_token)
+
+
 
 
 # @password.command('get')
