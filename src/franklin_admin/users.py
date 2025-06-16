@@ -69,11 +69,11 @@ def update_group_permissions(user_id: int, group_id: int, access_level: int, api
             headers=headers, 
             json={"access_level": access_level}
             )
-        if response.status_code == 200:
-            print("Access level updated successfully.")
-        # elif response.status_code == 404:
-        #     print("User is not a member of the project.")
-        else:
+        if response.status_code != 200:
+        #     print("Access level updated successfully.")
+        # # elif response.status_code == 404:
+        # #     print("User is not a member of the project.")
+        # else:
             print(f"Error {response.status_code}: {response.json()}")
 
 
@@ -125,7 +125,7 @@ def update_permissions(user_name, role, course, listed_course_name, user, passwo
 # add three levels of access: admin, vip, ta
 
 
-def create_impersonation_token(user_id: int, token_name: str, admin_api_token: str):
+def create_impersonation_token(user_id: int, admin_api_token: str):
 
     response = requests.post(
         f"https://{cfg.gitlab_domain}/api/v4/users/{user_id}/impersonation_tokens",
@@ -167,18 +167,15 @@ def password():
 
 
 @password.command('set')
+@click.argument("user")
+@click.argument("password")
 @click.option('--admin', prompt=True, help='User name')
 @click.option('--password', prompt=True, hide_input=True, help='Password')
-@click.argument("user")
-def set_password(admin, admin_password, user):
-
-    api_token = encrypt.get_api_token(admin, admin_password)
-
-    encrypt.encrypt(user, admin_password, 
-                    admin_passwords={
-                        admin: admin_password
-                        }
-                    )
+def set_password(user, password, admin, admin_password, ):
+    admin_api_token = encrypt.get_api_token(admin, admin_password)
+    user_id = gitlab.get_user_id(user, admin_api_token)
+    user_api_token = create_impersonation_token(user_id, admin_api_token)
+    encrypt.store_encrypted_token(user, password, user_api_token)
 
 
 # @password.command('get')
