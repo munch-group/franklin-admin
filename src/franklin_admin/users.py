@@ -45,11 +45,11 @@ permission_levels['inst'] = permission_levels['ta']
 def update_group_permissions(user_id: int, group_id: int, access_level: int, api_token: str):
 
     members = gitlab.get_group_members(group_id, api_token)
-    logger.debug('existing members', members)
+    logger.debug('existing members {members}')
 
     headers = {"PRIVATE-TOKEN": api_token, "Content-Type": "application/json"}
     if user_id not in members:
-        logger.debug('Adding usr to group', user_id, group_id, access_level)
+        logger.debug(f'Adding usr to group {user_id}, {group_id}, {access_level}')
 
         url = f"https://{cfg.gitlab_domain}/api/v4/groups/{group_id}/members"
         response = requests.post(url, headers=headers, json={
@@ -61,7 +61,7 @@ def update_group_permissions(user_id: int, group_id: int, access_level: int, api
         else:
             print(f"Error {response.status_code}: {response.json()}")
     else:
-        logger.debug('Updating access to group', user_id, group_id, access_level)
+        logger.debug(f'Updating access to group {user_id}, {group_id}, {access_level}')
         
         url = f"https://{cfg.gitlab_domain}/api/v4/groups/{group_id}/members/{user_id}"
         response = requests.put(
