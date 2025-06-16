@@ -172,7 +172,7 @@ def password():
 @click.argument("user")
 def set_password(admin, admin_password, user):
 
-
+    api_token = encrypt.get_api_token(admin, admin_password)
 
     encrypt.encrypt(user, admin_password, 
                     admin_passwords={
@@ -206,7 +206,7 @@ def token():
 def set_token(user, password, api_token):
     """Stores an encrypted token for the user.
     """
-    encrypt.store_encrypted_token(user, password, api_token, "token.json")
+    encrypt.store_encrypted_token(user, password, api_token)
 
 
 @token.command('get')
@@ -215,7 +215,7 @@ def set_token(user, password, api_token):
 def get_token(user, password):
     """Stores an encrypted token for the user.
     """
-    api_token = encrypt.decrypt_token(user, password, "token.json")
+    api_token = encrypt.get_api_token(user, password)
     term.echo(f'Stored personal access token: {api_token}')
 
 
