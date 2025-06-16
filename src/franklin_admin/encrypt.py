@@ -6,7 +6,7 @@ from Crypto.Protocol.KDF import PBKDF2
 from Crypto.Cipher import AES
 from Crypto.Random import get_random_bytes
 
-token_path_templ = os.path.dirname(sys.modules['franklin_educator'].__file__) + '/data/admin/{}_token.enc'
+token_path_templ = os.path.dirname(sys.modules['franklin_admin'].__file__) + '/data/admin/{}_token.enc'
 
 def derive_key(password: str, salt: bytes, iterations: int = 100_000) -> bytes:
     return PBKDF2(password, salt, dkLen=32, count=iterations)
@@ -40,7 +40,7 @@ def store_encrypted_token(user: str, password: str, token: str):
         f.write(encrypted)
     print("Token encrypted and stored.")
 
-    
+
 
 # import base64
 # import os
