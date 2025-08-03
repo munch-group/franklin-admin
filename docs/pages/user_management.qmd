@@ -1,0 +1,572 @@
+---
+title: "User Management Guide"
+subtitle: "Comprehensive Guide to Managing Franklin Users"
+---
+
+## Overview
+
+User management in Franklin involves creating accounts, assigning roles, managing permissions, and monitoring user activity. This guide covers all aspects of user administration from individual account management to bulk operations.
+
+## User Lifecycle Management
+
+{{< video videos/user-management-overview.mp4 
+    title="User Management Overview (3 min)"
+    width="100%" 
+    height="400"
+>}}
+
+### User Creation
+
+#### Individual User Creation
+
+```bash
+# Create a new user
+franklin user create john.doe@university.edu \
+  --name "John Doe" \
+  --role student \
+  --course "CS101"
+
+# Create user with multiple roles
+franklin user create jane.smith@university.edu \
+  --name "Jane Smith" \
+  --roles student,ta \
+  --courses "CS101,CS201"
+```
+
+#### Bulk User Import
+
+{{< video videos/bulk-user-import.mp4 
+    title="Importing Multiple Users from CSV (2 min)"
+    width="100%" 
+    height="400"
+>}}
+
+Create a CSV file with user information:
+
+```csv
+email,name,role,course
+john.doe@uni.edu,John Doe,student,CS101
+jane.smith@uni.edu,Jane Smith,student,CS101
+bob.jones@uni.edu,Bob Jones,ta,CS101
+alice.brown@uni.edu,Alice Brown,educator,CS101
+```
+
+Import the users:
+
+```bash
+# Basic import
+franklin import users.csv
+
+# Import with validation
+franklin import users.csv --validate --dry-run
+
+# Import with custom delimiter
+franklin import users.tsv --delimiter "\t"
+
+# Import with error handling
+franklin import users.csv --on-error skip --log errors.log
+```
+
+### User Modification
+
+#### Updating User Information
+
+```bash
+# Update user name
+franklin user update john.doe@uni.edu --name "John A. Doe"
+
+# Update email
+franklin user update old.email@uni.edu --email new.email@uni.edu
+
+# Update multiple fields
+franklin user update john.doe@uni.edu \
+  --name "John Doe Jr." \
+  --email john.doe.jr@uni.edu \
+  --department "Computer Science"
+```
+
+#### Role Management
+
+```bash
+# Add role to user
+franklin grant student john.doe@uni.edu
+
+# Upgrade role
+franklin grant ta john.doe@uni.edu
+franklin grant educator john.doe@uni.edu
+
+# Remove role
+franklin revoke ta john.doe@uni.edu
+
+# Check user roles
+franklin finger john.doe@uni.edu
+```
+
+### User Deactivation and Deletion
+
+```bash
+# Deactivate user (preserves data)
+franklin user deactivate john.doe@uni.edu
+
+# Reactivate user
+franklin user activate john.doe@uni.edu
+
+# Delete user (removes all data)
+franklin user delete john.doe@uni.edu --confirm
+
+# Bulk deactivation
+franklin user deactivate --from-file inactive_users.txt
+```
+
+## Role-Based Access Control (RBAC)
+
+### Understanding Roles
+
+#### Role Hierarchy
+
+```mermaid
+graph TD
+    Admin[Administrator] --> |Includes all permissions of| Educator
+    Educator --> |Includes all permissions of| TA[Teaching Assistant]
+    TA --> |Includes all permissions of| Student
+```
+
+#### Role Permissions
+
+| Permission | Student | TA | Educator | Admin |
+|------------|---------|----|---------:|-------|
+| **Exercises** |
+| Download exercises | ✅ | ✅ | ✅ | ✅ |
+| Submit solutions | ✅ | ✅ | ✅ | ✅ |
+| View own submissions | ✅ | ✅ | ✅ | ✅ |
+| **Course Management** |
+| View course roster | ❌ | ✅ | ✅ | ✅ |
+| Grade submissions | ❌ | ✅ | ✅ | ✅ |
+| Create exercises | ❌ | ❌ | ✅ | ✅ |
+| Publish exercises | ❌ | ❌ | ✅ | ✅ |
+| Manage course settings | ❌ | ❌ | ✅ | ✅ |
+| **User Management** |
+| View user profiles | ❌ | Partial | ✅ | ✅ |
+| Create users | ❌ | ❌ | Course only | ✅ |
+| Modify users | ❌ | ❌ | Course only | ✅ |
+| Delete users | ❌ | ❌ | ❌ | ✅ |
+| **System Administration** |
+| System configuration | ❌ | ❌ | ❌ | ✅ |
+| Backup/Restore | ❌ | ❌ | ❌ | ✅ |
+| View system logs | ❌ | ❌ | ❌ | ✅ |
+
+### Custom Roles
+
+Create custom roles for specific needs:
+
+```bash
+# Create custom role
+franklin role create "lab_assistant" \
+  --permissions "view_roster,help_students" \
+  --inherits-from "student"
+
+# Assign custom role
+franklin grant lab_assistant user@uni.edu
+
+# List custom roles
+franklin role list --custom
+```
+
+## Authentication Management
+
+### Password Management
+
+```bash
+# Set user password
+franklin password set john.doe@uni.edu
+> Enter new password: ********
+> Confirm password: ********
+
+# Force password reset on next login
+franklin password expire john.doe@uni.edu
+
+# Set password policy
+franklin config set password.min_length 12
+franklin config set password.require_special true
+franklin config set password.max_age_days 90
+
+# Bulk password reset
+franklin password reset --all-students --course "CS101"
+```
+
+### API Token Management
+
+```bash
+# Generate API token
+franklin token create john.doe@uni.edu \
+  --expires "2024-12-31" \
+  --scopes "read,write"
+
+# List user tokens
+franklin token list john.doe@uni.edu
+
+# Revoke specific token
+franklin token revoke TOKEN_ID
+
+# Revoke all tokens for user
+franklin token revoke --all john.doe@uni.edu
+
+# Rotate tokens
+franklin token rotate john.doe@uni.edu
+```
+
+### SSH Key Management
+
+```bash
+# Add SSH key for user
+franklin ssh add john.doe@uni.edu ~/.ssh/id_rsa.pub
+
+# List SSH keys
+franklin ssh list john.doe@uni.edu
+
+# Remove SSH key
+franklin ssh remove john.doe@uni.edu KEY_ID
+
+# Validate SSH keys
+franklin ssh validate --all
+```
+
+## Course Enrollment
+
+### Adding Users to Courses
+
+```bash
+# Enroll single student
+franklin course enroll "CS101" john.doe@uni.edu
+
+# Enroll multiple students
+franklin course enroll "CS101" \
+  john.doe@uni.edu \
+  jane.smith@uni.edu \
+  bob.jones@uni.edu
+
+# Enroll from file
+franklin course enroll "CS101" --from-file students.txt
+
+# Enroll with role
+franklin course enroll "CS101" alice@uni.edu --role ta
+```
+
+### Managing Course Access
+
+```bash
+# List course members
+franklin course members "CS101"
+
+# Check user's courses
+franklin user courses john.doe@uni.edu
+
+# Remove from course
+franklin course remove "CS101" john.doe@uni.edu
+
+# Transfer between courses
+franklin course transfer john.doe@uni.edu \
+  --from "CS101" \
+  --to "CS102"
+```
+
+### Course Permissions
+
+```bash
+# Grant course-specific permissions
+franklin grant ta john.doe@uni.edu --course "CS101"
+
+# Check course permissions
+franklin permissions check john.doe@uni.edu --course "CS101"
+
+# Audit course access
+franklin audit course-access "CS101"
+```
+
+## User Groups
+
+### Creating and Managing Groups
+
+```bash
+# Create group
+franklin group create "honors_students" \
+  --description "Honors program students"
+
+# Add users to group
+franklin group add-members "honors_students" \
+  john.doe@uni.edu \
+  jane.smith@uni.edu
+
+# List group members
+franklin group members "honors_students"
+
+# Apply permissions to group
+franklin grant advanced_exercises --group "honors_students"
+
+# Remove group
+franklin group delete "honors_students" --confirm
+```
+
+### Group-Based Operations
+
+```bash
+# Enroll group in course
+franklin course enroll "CS301" --group "honors_students"
+
+# Send notification to group
+franklin notify --group "honors_students" \
+  --subject "New Exercise Available" \
+  --message "Advanced exercise 5 is now available"
+
+# Export group data
+franklin export group "honors_students" --format csv
+```
+
+## User Activity Monitoring
+
+### Activity Tracking
+
+```bash
+# View user activity
+franklin activity user john.doe@uni.edu --last 7d
+
+# View course activity
+franklin activity course "CS101" --last 24h
+
+# Generate activity report
+franklin report activity \
+  --from "2024-01-01" \
+  --to "2024-01-31" \
+  --output activity_report.pdf
+```
+
+### Login Monitoring
+
+```bash
+# View recent logins
+franklin logins recent --limit 100
+
+# Check failed login attempts
+franklin logins failed --user john.doe@uni.edu
+
+# Monitor suspicious activity
+franklin monitor suspicious --realtime
+
+# Export login data
+franklin export logins --format json --last 30d
+```
+
+### Exercise Progress Tracking
+
+```bash
+# Check user progress
+franklin progress user john.doe@uni.edu --course "CS101"
+
+# Course-wide progress
+franklin progress course "CS101"
+
+# Generate progress report
+franklin report progress "CS101" --output progress.html
+```
+
+## Compliance and Auditing
+
+### GDPR Compliance
+
+```bash
+# Export user data (GDPR data request)
+franklin gdpr export john.doe@uni.edu --full
+
+# Anonymize user data
+franklin gdpr anonymize john.doe@uni.edu --retain-progress
+
+# Delete all user data (right to be forgotten)
+franklin gdpr forget john.doe@uni.edu --confirm --purge
+```
+
+### Audit Logs
+
+```bash
+# View audit logs
+franklin audit logs --last 7d
+
+# Filter audit logs
+franklin audit logs \
+  --user john.doe@uni.edu \
+  --action "permission_change" \
+  --from "2024-01-01"
+
+# Export audit trail
+franklin audit export --format pdf --sign
+```
+
+### Compliance Reports
+
+```bash
+# Generate compliance report
+franklin report compliance --standard "FERPA"
+
+# User access audit
+franklin audit access --comprehensive
+
+# Permission audit
+franklin audit permissions --detect-anomalies
+```
+
+## Automation and Integration
+
+### Automated User Management
+
+```python
+# automated_enrollment.py
+import subprocess
+import csv
+from datetime import datetime
+
+def enroll_students(course_id, roster_file):
+    """Automatically enroll students from roster"""
+    
+    with open(roster_file, 'r') as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            # Create user if doesn't exist
+            subprocess.run([
+                'franklin', 'user', 'create',
+                row['email'],
+                '--name', row['name'],
+                '--role', 'student'
+            ])
+            
+            # Enroll in course
+            subprocess.run([
+                'franklin', 'course', 'enroll',
+                course_id,
+                row['email']
+            ])
+            
+            print(f"Enrolled {row['name']} in {course_id}")
+
+# Schedule for automatic execution
+if datetime.now().weekday() == 0:  # Monday
+    enroll_students("CS101", "new_students.csv")
+```
+
+### LDAP/Active Directory Sync
+
+```bash
+# Configure LDAP sync
+franklin config set ldap.server "ldap.university.edu"
+franklin config set ldap.base_dn "dc=university,dc=edu"
+franklin config set ldap.sync_interval 3600
+
+# Test LDAP connection
+franklin ldap test
+
+# Manual sync
+franklin ldap sync --dry-run
+franklin ldap sync --confirm
+
+# Map LDAP groups to Franklin roles
+franklin ldap map "cn=students,ou=groups" --to-role student
+franklin ldap map "cn=faculty,ou=groups" --to-role educator
+```
+
+## Troubleshooting User Issues
+
+### Common Problems and Solutions
+
+#### User Can't Log In
+
+```bash
+# Diagnose login issues
+franklin diagnose login john.doe@uni.edu
+
+# Check account status
+franklin user status john.doe@uni.edu
+
+# Reset authentication
+franklin auth reset john.doe@uni.edu
+
+# Check for locks
+franklin user unlock john.doe@uni.edu
+```
+
+#### Permission Denied Errors
+
+```bash
+# Verify permissions
+franklin permissions verify john.doe@uni.edu
+
+# Fix permission inconsistencies
+franklin permissions repair john.doe@uni.edu
+
+# Recalculate effective permissions
+franklin permissions recalculate --all
+```
+
+#### Missing Course Access
+
+```bash
+# Verify enrollment
+franklin course check-enrollment "CS101" john.doe@uni.edu
+
+# Fix enrollment issues
+franklin course repair-enrollment "CS101"
+
+# Resync course roster
+franklin course sync "CS101"
+```
+
+## Best Practices
+
+::: {.callout-tip}
+## User Management Best Practices
+
+1. **Regular Audits**: Review user permissions quarterly
+2. **Principle of Least Privilege**: Grant minimum necessary permissions
+3. **Automated Provisioning**: Use scripts for bulk operations
+4. **Consistent Naming**: Use institutional email as username
+5. **Document Changes**: Log all permission changes with reasons
+6. **Regular Cleanup**: Remove inactive users each semester
+7. **Backup User Data**: Before major changes
+8. **Test in Staging**: Test bulk operations in non-production first
+:::
+
+## Security Considerations
+
+### Account Security
+
+```bash
+# Enable two-factor authentication
+franklin security 2fa enable --all-admins
+
+# Set session timeout
+franklin config set session.timeout_minutes 30
+
+# Enable account lockout
+franklin config set security.max_login_attempts 5
+franklin config set security.lockout_duration_minutes 15
+
+# Require strong passwords
+franklin config set password.policy "strong"
+```
+
+### Access Control
+
+```bash
+# Implement IP whitelisting
+franklin security whitelist add 192.168.1.0/24
+
+# Enable audit logging
+franklin config set audit.log_all_actions true
+
+# Regular permission review
+franklin schedule task "permission_review" --monthly
+```
+
+## Next Steps
+
+- Review [Security Guide](security.qmd) for security best practices
+- Learn about [Course Administration](course_admin.qmd)
+- Explore [Monitoring Tools](monitoring.qmd)
+- Read [Troubleshooting Guide](troubleshooting.qmd)

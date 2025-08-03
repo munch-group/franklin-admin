@@ -1,0 +1,562 @@
+---
+title: "Administrator Setup Guide"
+subtitle: "Complete Installation and Configuration for Franklin Administrators"
+---
+
+## Prerequisites
+
+Before setting up Franklin Admin, ensure you have:
+
+- **System Requirements**:
+  - Linux/Unix server (Ubuntu 20.04+ recommended) or macOS
+  - Minimum 8GB RAM, 50GB storage
+  - Python 3.9 or higher
+  - Docker Engine 20.10+
+  
+- **Network Requirements**:
+  - HTTPS access to GitLab instance
+  - Outbound internet for package downloads
+  - Open ports: 8888 (Jupyter), 443 (HTTPS), 22 (SSH)
+
+- **Administrative Access**:
+  - GitLab administrator account
+  - Docker daemon access
+  - Sudo/root privileges for system configuration
+
+## Installation
+
+{{< video videos/admin-complete-setup.mp4 
+    title="Complete Admin Setup Walkthrough (10 min)"
+    width="100%" 
+    height="400"
+>}}
+
+### Step 1: System Preparation
+
+::: {.panel-tabset}
+
+### Ubuntu/Debian
+
+```bash
+# Update system
+sudo apt update && sudo apt upgrade -y
+
+# Install dependencies
+sudo apt install -y \
+  python3-pip \
+  python3-venv \
+  git \
+  curl \
+  wget \
+  build-essential
+
+# Install Docker
+curl -fsSL https://get.docker.com | sudo sh
+sudo usermod -aG docker $USER
+
+# Install Miniforge
+wget https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-x86_64.sh
+bash Miniforge3-Linux-x86_64.sh -b -p /opt/miniforge3
+echo 'export PATH="/opt/miniforge3/bin:$PATH"' >> ~/.bashrc
+source ~/.bashrc
+```
+
+### RHEL/CentOS
+
+```bash
+# Update system
+sudo yum update -y
+
+# Install dependencies
+sudo yum groupinstall -y "Development Tools"
+sudo yum install -y \
+  python3 \
+  python3-pip \
+  git \
+  curl \
+  wget
+
+# Install Docker
+sudo yum install -y docker-ce docker-ce-cli containerd.io
+sudo systemctl start docker
+sudo systemctl enable docker
+
+# Install Miniforge
+wget https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-x86_64.sh
+bash Miniforge3-Linux-x86_64.sh -b -p /opt/miniforge3
+```
+
+### macOS
+
+```bash
+# Install Homebrew if not present
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+# Install dependencies
+brew install python git wget
+
+# Install Docker Desktop
+brew install --cask docker
+
+# Install Miniforge
+wget https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-MacOSX-arm64.sh
+bash Miniforge3-MacOSX-arm64.sh -b
+```
+
+:::
+
+### Step 2: Install Franklin Admin
+
+```bash
+# Add channels
+conda config --add channels conda-forge
+conda config --add channels munch-group
+conda config --set channel_priority strict
+
+# Create environment
+conda create -n franklin-admin python=3.11
+conda activate franklin-admin
+
+# Install Franklin Admin (includes all components)
+conda install franklin-admin
+
+# Verify installation
+franklin --version
+franklin admin --help
+```
+
+### Step 3: Initial Configuration
+
+```bash
+# Create Franklin configuration directory
+mkdir -p ~/.franklin/config
+cd ~/.franklin
+
+# Generate default configuration
+franklin admin init
+
+# This creates:
+# - config/franklin.yml
+# - config/gitlab.yml
+# - config/docker.yml
+# - config/security.yml
+```
+
+## GitLab Configuration
+
+{{< video videos/gitlab-setup-configuration.mp4 
+    title="Configuring GitLab Integration (5 min)"
+    width="100%" 
+    height="400"
+>}}
+
+### Setting Up GitLab Connection
+
+```bash
+# Configure GitLab instance
+franklin config set gitlab.url "https://gitlab.your-institution.edu"
+franklin config set gitlab.api_version "v4"
+
+# Set administrator token
+franklin config set gitlab.admin_token "YOUR_ADMIN_TOKEN"
+
+# Test connection
+franklin gitlab test
+```
+
+### Creating GitLab Personal Access Token
+
+1. Log into GitLab as administrator
+2. Navigate to **User Settings → Access Tokens**
+3. Create token with scopes:
+   - `api` - Full API access
+   - `read_user` - Read user information
+   - `read_repository` - Read repository content
+   - `write_repository` - Write repository content
+   - `read_registry` - Read container registry
+   - `write_registry` - Write container registry
+   - `sudo` - Perform API actions as any user (admin only)
+
+### GitLab Group Structure
+
+```bash
+# Create Franklin root group
+franklin gitlab create-group "franklin" \
+  --description "Franklin Exercise Platform" \
+  --visibility private
+
+# Create course subgroups
+franklin gitlab create-group "franklin/courses" \
+  --description "Course repositories"
+
+franklin gitlab create-group "franklin/courses/cs101" \
+  --description "CS101 - Introduction to Programming"
+
+# Set up container registry
+franklin gitlab enable-registry "franklin"
+```
+
+## Docker Configuration
+
+### Docker Registry Setup
+
+```bash
+# Configure Docker registry
+franklin config set docker.registry "registry.gitlab.your-institution.edu"
+franklin config set docker.namespace "franklin"
+
+# Login to registry
+docker login registry.gitlab.your-institution.edu
+```
+
+### Base Image Configuration
+
+```bash
+# Pull Franklin base images
+franklin docker pull-base --all
+
+# Create custom base image (optional)
+cat > Dockerfile.base << EOF
+FROM continuumio/miniconda3:latest
+
+# Install system packages
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    git \
+    vim \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Pixi
+RUN curl -fsSL https://pixi.sh/install.sh | bash
+
+# Pre-install common packages
+RUN conda install -y jupyter numpy pandas matplotlib
+
+WORKDIR /workspace
+EOF
+
+# Build and push custom base
+docker build -f Dockerfile.base -t registry.gitlab.your-institution.edu/franklin/base:custom .
+docker push registry.gitlab.your-institution.edu/franklin/base:custom
+```
+
+## Database Setup
+
+### PostgreSQL Configuration
+
+```bash
+# Install PostgreSQL
+sudo apt install postgresql postgresql-contrib
+
+# Create Franklin database
+sudo -u postgres psql << EOF
+CREATE DATABASE franklin;
+CREATE USER franklin_admin WITH ENCRYPTED PASSWORD 'secure_password';
+GRANT ALL PRIVILEGES ON DATABASE franklin TO franklin_admin;
+EOF
+
+# Configure Franklin to use PostgreSQL
+franklin config set database.type "postgresql"
+franklin config set database.host "localhost"
+franklin config set database.port 5432
+franklin config set database.name "franklin"
+franklin config set database.user "franklin_admin"
+franklin config set database.password "secure_password"
+
+# Initialize database schema
+franklin admin db init
+```
+
+### Database Backup Configuration
+
+```bash
+# Set up automated backups
+cat > /etc/cron.d/franklin-backup << EOF
+0 2 * * * franklin /usr/local/bin/franklin admin backup --database --output /backups/
+EOF
+
+# Test backup
+franklin admin backup --database --output /tmp/test-backup.sql
+```
+
+## Security Configuration
+
+### SSL/TLS Setup
+
+```bash
+# Generate self-signed certificate (for testing)
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+  -keyout ~/.franklin/ssl/franklin.key \
+  -out ~/.franklin/ssl/franklin.crt
+
+# Configure Franklin to use SSL
+franklin config set server.ssl.enabled true
+franklin config set server.ssl.cert "~/.franklin/ssl/franklin.crt"
+franklin config set server.ssl.key "~/.franklin/ssl/franklin.key"
+
+# For production, use Let's Encrypt
+sudo apt install certbot
+sudo certbot certonly --standalone -d franklin.your-institution.edu
+```
+
+### Authentication Configuration
+
+```bash
+# Configure authentication methods
+franklin config set auth.methods "local,ldap,oauth"
+
+# Set session configuration
+franklin config set auth.session.timeout 3600
+franklin config set auth.session.max_concurrent 5
+
+# Configure password policy
+franklin config set auth.password.min_length 12
+franklin config set auth.password.require_uppercase true
+franklin config set auth.password.require_numbers true
+franklin config set auth.password.require_special true
+franklin config set auth.password.max_age_days 90
+```
+
+### LDAP Integration
+
+```bash
+# Configure LDAP
+franklin config set ldap.enabled true
+franklin config set ldap.server "ldap.your-institution.edu"
+franklin config set ldap.port 389
+franklin config set ldap.base_dn "dc=institution,dc=edu"
+franklin config set ldap.bind_dn "cn=franklin,ou=services,dc=institution,dc=edu"
+franklin config set ldap.bind_password "ldap_password"
+
+# Configure LDAP mappings
+franklin config set ldap.user_filter "(objectClass=person)"
+franklin config set ldap.group_filter "(objectClass=group)"
+franklin config set ldap.email_attribute "mail"
+franklin config set ldap.name_attribute "displayName"
+
+# Test LDAP connection
+franklin ldap test
+```
+
+## System Services
+
+### Franklin Service Setup
+
+```bash
+# Create systemd service
+sudo cat > /etc/systemd/system/franklin-admin.service << EOF
+[Unit]
+Description=Franklin Admin Service
+After=network.target docker.service postgresql.service
+
+[Service]
+Type=simple
+User=franklin
+Group=franklin
+WorkingDirectory=/opt/franklin
+ExecStart=/opt/miniforge3/bin/franklin admin serve
+Restart=always
+RestartSec=10
+Environment="PATH=/opt/miniforge3/bin:/usr/local/bin:/usr/bin"
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# Enable and start service
+sudo systemctl daemon-reload
+sudo systemctl enable franklin-admin
+sudo systemctl start franklin-admin
+
+# Check status
+sudo systemctl status franklin-admin
+```
+
+### Monitoring Setup
+
+```bash
+# Install monitoring tools
+pip install prometheus-client
+
+# Configure Prometheus metrics
+franklin config set monitoring.prometheus.enabled true
+franklin config set monitoring.prometheus.port 9090
+
+# Set up health checks
+franklin config set monitoring.health_check.enabled true
+franklin config set monitoring.health_check.interval 60
+```
+
+## Initial Data Setup
+
+### Creating Admin User
+
+```bash
+# Create super administrator
+franklin admin create-superuser
+> Email: admin@institution.edu
+> Name: System Administrator
+> Password: ********
+
+# Verify admin access
+franklin finger admin@institution.edu
+```
+
+### Setting Up First Course
+
+```bash
+# Create course structure
+franklin course create "CS101" \
+  --title "Introduction to Programming" \
+  --semester "Fall 2024" \
+  --instructor "prof@institution.edu"
+
+# Create educator account
+franklin user create prof@institution.edu \
+  --name "Professor Smith" \
+  --role educator
+
+# Assign to course
+franklin course assign "CS101" prof@institution.edu --role instructor
+
+# Import student roster
+franklin course import-students "CS101" students.csv
+```
+
+## Verification and Testing
+
+### System Health Check
+
+```bash
+# Run comprehensive health check
+franklin admin health-check --verbose
+
+# Check individual components
+franklin admin check --gitlab
+franklin admin check --docker
+franklin admin check --database
+franklin admin check --storage
+
+# Generate system report
+franklin admin report --output system-report.html
+```
+
+### Test User Workflow
+
+```bash
+# Create test users
+franklin user create test-student@test.edu --role student
+franklin user create test-educator@test.edu --role educator
+
+# Create test course
+franklin course create "TEST101" --title "Test Course"
+
+# Create test exercise
+franklin exercise create "TEST101" "Test Exercise"
+
+# Verify student can access
+franklin test student-workflow test-student@test.edu "TEST101"
+```
+
+## Maintenance Tasks
+
+### Regular Maintenance Schedule
+
+```bash
+# Daily tasks (crontab)
+0 1 * * * /usr/local/bin/franklin admin cleanup --temp-files
+0 2 * * * /usr/local/bin/franklin admin backup --incremental
+
+# Weekly tasks
+0 3 * * 0 /usr/local/bin/franklin admin optimize --database
+0 4 * * 0 /usr/local/bin/franklin admin prune --docker-images
+
+# Monthly tasks
+0 5 1 * * /usr/local/bin/franklin admin audit --full
+0 6 1 * * /usr/local/bin/franklin admin update --check
+```
+
+### Log Rotation
+
+```bash
+# Configure log rotation
+cat > /etc/logrotate.d/franklin << EOF
+/var/log/franklin/*.log {
+    daily
+    rotate 30
+    compress
+    delaycompress
+    notifempty
+    create 0640 franklin franklin
+    sharedscripts
+    postrotate
+        systemctl reload franklin-admin
+    endscript
+}
+EOF
+```
+
+## Troubleshooting Setup Issues
+
+### Common Installation Problems
+
+**Permission Denied**
+```bash
+# Fix file permissions
+sudo chown -R $USER:$USER ~/.franklin
+chmod 700 ~/.franklin
+chmod 600 ~/.franklin/config/*
+```
+
+**Port Already in Use**
+```bash
+# Find process using port
+sudo lsof -i :8888
+# Change Franklin port
+franklin config set server.port 8889
+```
+
+**Docker Connection Issues**
+```bash
+# Verify Docker is running
+docker ps
+# Add user to docker group
+sudo usermod -aG docker $USER
+# Restart Docker
+sudo systemctl restart docker
+```
+
+### Validation Checklist
+
+- [ ] Franklin Admin installed and accessible
+- [ ] GitLab connection established
+- [ ] Docker registry configured
+- [ ] Database initialized
+- [ ] SSL/TLS configured
+- [ ] Authentication working
+- [ ] First admin user created
+- [ ] Test course created
+- [ ] Student workflow tested
+- [ ] Backups configured
+- [ ] Monitoring enabled
+- [ ] Service running
+- [ ] Logs rotating
+
+## Next Steps
+
+After completing setup:
+
+1. Review [User Management Guide](user_management.qmd)
+2. Set up courses following [Course Administration](course_admin.qmd)
+3. Configure monitoring per [Monitoring Guide](monitoring.qmd)
+4. Review [Security Best Practices](security.qmd)
+5. Plan disaster recovery using [Backup Guide](backup.qmd)
+
+## Support
+
+For setup assistance:
+
+- **Documentation**: [Admin Guide](index.qmd)
+- **Community Forum**: [GitHub Discussions](https://github.com/munch-group/franklin/discussions)
+- **Issue Tracker**: [GitHub Issues](https://github.com/munch-group/franklin/issues)
+- **Email Support**: admin-support@franklin.edu

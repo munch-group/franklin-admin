@@ -1,0 +1,391 @@
+---
+title: "Franklin Administrator Documentation"
+subtitle: "Managing Users, Courses, and Infrastructure"
+---
+
+## Overview
+
+Franklin Admin is the administrative plugin for the Franklin ecosystem, providing powerful tools for managing users, permissions, courses, and the overall Franklin infrastructure. This extension is designed for system administrators and course coordinators who need to manage access control and monitor system usage.
+
+## Quick Start
+
+### Installation
+
+```bash
+# Install Franklin with admin tools
+conda install -c conda-forge -c munch-group franklin-admin
+
+# Note: franklin-admin includes franklin-educator and franklin core
+```
+
+### Initial Setup
+
+```bash
+# 1. Configure GitLab connection
+franklin config set gitlab_url https://gitlab.your-institution.edu
+franklin config set gitlab_admin_token YOUR_ADMIN_TOKEN
+
+# 2. Verify admin access
+franklin finger admin
+
+# 3. Set up first course
+franklin grant educator professor@university.edu
+franklin grant ta assistant@university.edu --course "CS101"
+```
+
+## Core Features
+
+::: {.grid}
+
+::: {.g-col-12 .g-col-md-6}
+### 👥 **User Management**
+- Create and manage user accounts
+- Assign roles (student, TA, educator, admin)
+- Bulk user import from CSV
+- Access control per course
+- Password and token management
+:::
+
+::: {.g-col-12 .g-col-md-6}
+### 🏫 **Course Administration**
+- Create course structures
+- Manage course permissions
+- Monitor exercise distribution
+- Track student progress
+- Generate usage reports
+:::
+
+::: {.g-col-12 .g-col-md-6}
+### 🔐 **Security & Access**
+- API token generation
+- Encrypted credential storage
+- Role-based access control
+- Audit logging
+- Session management
+:::
+
+::: {.g-col-12 .g-col-md-6}
+### 📊 **Monitoring & Analytics**
+- System usage statistics
+- Exercise completion rates
+- Resource utilization
+- Error tracking
+- Performance metrics
+:::
+
+:::
+
+## Command Reference
+
+### User Management Commands
+
+| Command | Description |
+|---------|-------------|
+| `franklin finger <username>` | Get user information |
+| `franklin grant <role> <username>` | Assign role to user |
+| `franklin revoke <role> <username>` | Remove role from user |
+| `franklin password set <username>` | Set user password |
+| `franklin token create <username>` | Generate API token |
+| `franklin token revoke <username>` | Revoke API token |
+
+### Course Management Commands
+
+| Command | Description |
+|---------|-------------|
+| `franklin course create <name>` | Create new course |
+| `franklin course list` | List all courses |
+| `franklin course assign <course> <user>` | Assign user to course |
+| `franklin course remove <course> <user>` | Remove user from course |
+| `franklin course stats <course>` | Show course statistics |
+
+### System Administration
+
+| Command | Description |
+|---------|-------------|
+| `franklin system status` | System health check |
+| `franklin system backup` | Backup configuration |
+| `franklin system restore` | Restore from backup |
+| `franklin system logs` | View system logs |
+| `franklin system clean` | Clean up resources |
+
+## User Roles and Permissions
+
+### Role Hierarchy
+
+```mermaid
+graph TD
+    Admin[Administrator] --> Educator
+    Educator --> TA[Teaching Assistant]
+    TA --> Student
+    
+    Admin --> |Full System Access| System[System Management]
+    Educator --> |Course Management| Course[Course Operations]
+    TA --> |Exercise Support| Support[Student Support]
+    Student --> |Exercise Access| Exercises[Download & Submit]
+```
+
+### Permission Matrix
+
+| Action | Student | TA | Educator | Admin |
+|--------|---------|----|---------:|-------|
+| Download exercises | ✅ | ✅ | ✅ | ✅ |
+| Submit exercises | ✅ | ✅ | ✅ | ✅ |
+| View student submissions | ❌ | ✅ | ✅ | ✅ |
+| Create exercises | ❌ | ❌ | ✅ | ✅ |
+| Publish exercises | ❌ | ❌ | ✅ | ✅ |
+| Manage course users | ❌ | ❌ | ✅ | ✅ |
+| Create courses | ❌ | ❌ | ❌ | ✅ |
+| System configuration | ❌ | ❌ | ❌ | ✅ |
+
+## Documentation Sections
+
+::: {.grid}
+
+::: {.g-col-12 .g-col-md-4}
+### [Setup Guide](setup.qmd)
+Complete installation and configuration
+:::
+
+::: {.g-col-12 .g-col-md-4}
+### [User Management](user_management.qmd)
+Managing users and permissions
+:::
+
+::: {.g-col-12 .g-col-md-4}
+### [Course Administration](course_admin.qmd)
+Setting up and managing courses
+:::
+
+::: {.g-col-12 .g-col-md-4}
+### [Security Guide](security.qmd)
+Security best practices and policies
+:::
+
+::: {.g-col-12 .g-col-md-4}
+### [Monitoring](monitoring.qmd)
+System monitoring and analytics
+:::
+
+::: {.g-col-12 .g-col-md-4}
+### [Troubleshooting](troubleshooting.qmd)
+Common issues and solutions
+:::
+
+:::
+
+## Common Administrative Tasks
+
+### Setting Up a New Course
+
+```bash
+# 1. Create course structure
+franklin course create "CS101 - Introduction to Programming"
+
+# 2. Assign educator
+franklin grant educator prof.smith@university.edu
+franklin course assign "CS101" prof.smith@university.edu
+
+# 3. Add teaching assistants
+franklin grant ta ta1@university.edu --course "CS101"
+franklin grant ta ta2@university.edu --course "CS101"
+
+# 4. Import student roster
+franklin course import-students "CS101" students.csv
+
+# 5. Verify setup
+franklin course stats "CS101"
+```
+
+### Bulk User Import
+
+```bash
+# Prepare CSV file with columns: username, email, role
+cat > users.csv << EOF
+jsmith,john.smith@uni.edu,student
+mjones,mary.jones@uni.edu,student
+rbrown,robert.brown@uni.edu,ta
+EOF
+
+# Import users
+franklin import users.csv --course "CS101"
+
+# Verify import
+franklin list users --course "CS101"
+```
+
+### Managing API Tokens
+
+```bash
+# Generate token for educator
+franklin token create prof.smith --role educator --expires 90d
+
+# List all tokens
+franklin token list
+
+# Revoke compromised token
+franklin token revoke prof.smith --force
+
+# Rotate all tokens
+franklin token rotate --all
+```
+
+## Security Considerations
+
+### Authentication Methods
+
+1. **Username/Password**: Basic authentication for web interface
+2. **API Tokens**: For programmatic access
+3. **SSH Keys**: For Git operations
+4. **LDAP/AD Integration**: Enterprise authentication
+
+### Best Practices
+
+::: {.callout-important}
+## Security Checklist
+
+- [ ] Use strong, unique admin passwords
+- [ ] Enable two-factor authentication
+- [ ] Regularly rotate API tokens
+- [ ] Audit user permissions quarterly
+- [ ] Monitor access logs
+- [ ] Implement IP whitelisting for admin access
+- [ ] Regular security updates
+- [ ] Encrypted backups
+:::
+
+## System Architecture
+
+```mermaid
+graph LR
+    A[Admin Interface] --> B[Franklin Admin API]
+    B --> C[GitLab API]
+    B --> D[Database]
+    B --> E[Docker Registry]
+    
+    C --> F[User Management]
+    C --> G[Repository Management]
+    D --> H[User Data]
+    D --> I[Course Data]
+    E --> J[Exercise Images]
+```
+
+## Monitoring and Maintenance
+
+### System Health Checks
+
+```bash
+# Daily health check
+franklin system health
+
+# Check specific components
+franklin system check --gitlab
+franklin system check --docker
+franklin system check --database
+
+# Generate health report
+franklin system report --output health-report.pdf
+```
+
+### Usage Analytics
+
+```bash
+# Course statistics
+franklin stats --course "CS101" --period "last-month"
+
+# User activity
+franklin stats --user "student@uni.edu" --detailed
+
+# System-wide metrics
+franklin stats --all --export stats.csv
+```
+
+## Backup and Recovery
+
+### Backup Strategy
+
+```bash
+# Full backup
+franklin backup create --full --output /backups/
+
+# Incremental backup
+franklin backup create --incremental --since "2024-01-01"
+
+# Backup specific course
+franklin backup create --course "CS101" --include-exercises
+
+# Automated daily backup (crontab)
+0 2 * * * /usr/bin/franklin backup create --auto
+```
+
+### Disaster Recovery
+
+```bash
+# Restore from backup
+franklin backup restore --from /backups/backup-2024-01-15.tar
+
+# Restore specific course
+franklin backup restore --course "CS101" --from backup.tar
+
+# Verify restoration
+franklin system verify --deep-check
+```
+
+## Integration with External Systems
+
+### LDAP/Active Directory
+
+```yaml
+# config/ldap.yml
+ldap:
+  server: ldap.university.edu
+  port: 389
+  base_dn: "dc=university,dc=edu"
+  user_filter: "(objectClass=person)"
+  group_filter: "(objectClass=group)"
+  sync_interval: 3600
+```
+
+### Learning Management Systems
+
+```bash
+# Export grades to LMS
+franklin export grades --course "CS101" --format moodle
+
+# Import roster from Canvas
+franklin import roster --from canvas --course "CS101"
+
+# Sync with Blackboard
+franklin sync blackboard --bidirectional
+```
+
+## Troubleshooting
+
+### Common Issues
+
+**Users can't access exercises**
+```bash
+franklin diagnose user-access student@uni.edu
+franklin permissions check student@uni.edu --course "CS101"
+franklin permissions fix --auto
+```
+
+**GitLab synchronization failing**
+```bash
+franklin gitlab test-connection
+franklin gitlab sync --force
+franklin gitlab repair-webhooks
+```
+
+**Performance degradation**
+```bash
+franklin performance analyze
+franklin cache clear
+franklin database optimize
+```
+
+## Support
+
+- **Admin Guide**: [Complete Setup Guide](setup.qmd)
+- **Security**: [Security Best Practices](security.qmd)
+- **API Documentation**: [Admin API Reference](api.qmd)
+- **Support**: [admin-support@franklin.edu](mailto:admin-support@franklin.edu)
