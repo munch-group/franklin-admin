@@ -1,11 +1,34 @@
 
+"""Password generation utilities for the Franklin admin system.
+
+This module provides deterministic password generation based on
+user names or existing passwords using a seeded random generator.
+"""
 
 import random
 
-def generate_password(password):
-    """
-    Users are issued the first of the 100 passwords and can then generate 
-    new passwords from their current password.
+def generate_password(password: str) -> str:
+    """Generate a new password from an existing password.
+    
+    Users are issued the first of 100 passwords and can then generate 
+    new passwords from their current password using deterministic seeding.
+    
+    Parameters
+    ----------
+    password : str
+        Current password to generate new password from.
+        
+    Returns
+    -------
+    str
+        New generated password (8 characters, ASCII 35-90).
+        
+    Notes
+    -----
+    The function uses a deterministic seed based on the input password
+    combined with a fixed string, ensuring reproducible password generation.
+    Password characters are in the ASCII range 35-90 which includes
+    symbols, digits, and uppercase letters.
     """
     random.seed(f'{password} - franklin rules!', version=2)
     return ''.join([chr(random.randint(35, 90)) for _ in range(8)])

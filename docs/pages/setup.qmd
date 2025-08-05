@@ -107,6 +107,24 @@ bash Miniforge3-MacOSX-arm64.sh -b
 
 ### Step 2: Install Franklin Admin
 
+::: {.panel-tabset}
+
+### Using Pixi (Recommended)
+
+```bash
+# Install Pixi if not already installed
+curl -fsSL https://pixi.sh/install.sh | bash
+
+# Install Franklin Admin (includes all components)
+pixi global install franklin-admin --channel conda-forge --channel munch-group
+
+# Verify installation
+franklin --version
+franklin admin --help
+```
+
+### Using Conda
+
 ```bash
 # Add channels
 conda config --add channels conda-forge
@@ -124,6 +142,8 @@ conda install franklin-admin
 franklin --version
 franklin admin --help
 ```
+
+:::
 
 ### Step 3: Initial Configuration
 

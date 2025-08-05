@@ -44,7 +44,7 @@ permission_levels['inst'] = permission_levels['ta']
 
 def update_group_permissions(user_id: int, group_id: int, access_level: int, api_token: str):
 
-    members = gitlab.get_group_members(group_id, api_token)
+    members: Dict[int, Any] = gitlab.get_group_members(group_id, api_token)
     logger.debug('existing members {members}')
 
     headers = {"PRIVATE-TOKEN": api_token, "Content-Type": "application/json"}
@@ -79,11 +79,11 @@ def update_group_permissions(user_id: int, group_id: int, access_level: int, api
 
 def update_permissions(user_name, role, course, listed_course_name, user, password, project=None):
 
-    api_token = encrypt.get_api_token(user, password)
+    api_token: str = encrypt.get_api_token(user, password)
 
-    user_id = gitlab.get_user_id(user_name, api_token)
-    group_id = gitlab.get_group_id(cfg.gitlab_group, api_token)
-    subgroup_id = gitlab.get_group_id(course, api_token)
+    user_id: int = gitlab.get_user_id(user_name, api_token)
+    group_id: int = gitlab.get_group_id(cfg.gitlab_group, api_token)
+    subgroup_id: int = gitlab.get_group_id(course, api_token)
 
     # term.echo(f"Updating permissions for user '{user_name}' "
     #           f"({get_user_info(user_id, api_token)['name']}) "
@@ -144,8 +144,10 @@ def create_impersonation_token(user_id: int, admin_api_token: str):
         print("Token created:")
         print(f"Token: {token_info['token']}")
         print(f"Scopes: {token_info['scopes']}")
+        return token_info['token']
     else:
         print(f"Error: {response.status_code} - {response.text}")
+        return None
 
 
 # @click.group(cls=utils.AliasedGroup)
