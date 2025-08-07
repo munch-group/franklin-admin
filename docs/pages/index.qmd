@@ -112,7 +112,10 @@ franklin grant ta assistant@university.edu --course "CS101"
 
 ### Role Hierarchy
 
-```mermaid
+```{mermaid}
+%%| echo: false
+%%| label: fig-role-hierarchy
+%%| fig-cap: "Role Hierarchy"
 graph TD
     Admin[Administrator] --> Educator
     Educator --> TA[Teaching Assistant]
