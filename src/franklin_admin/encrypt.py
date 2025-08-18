@@ -105,7 +105,7 @@ def get_api_token(user: str, password: str) -> str:
     api_token = decrypt_token(encrypted, password)
     return api_token
 
-def store_encrypted_token(user: str, password: str, token: str) -> None:
+def store_encrypted_token(user: str, password: str, token: str, overwrite=False) -> None:
     """Encrypt and store an API token for a user.
     
     Parameters
@@ -122,11 +122,12 @@ def store_encrypted_token(user: str, password: str, token: str) -> None:
     OSError
         If token file cannot be written.
     """
+    token_file_name = token_path_templ.format(user)
+    if os.path.exists(token_file_name) and not overwrite:
+        raise FileExistsError(f"Token file {token_file_name} already exists.")
     encrypted = encrypt_token(token, password)
-    with open(token_path_templ.format(user), "wb") as f:
+    with open(token_file_name, "wb") as f:
         f.write(encrypted)
-    print("Token encrypted and stored.")
-
 
 
 # import base64

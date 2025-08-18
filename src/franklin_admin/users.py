@@ -173,11 +173,16 @@ def password():
 @click.argument("password")
 @click.option('--admin', prompt=True, help='User name')
 @click.option('--password', prompt=True, hide_input=True, help='Password')
-def set_password(user, password, admin, admin_password):
+@click.option('--overwrite', default=False, help='Overwrite existing token if it exists.')
+def set_password(user, password, admin, admin_password, overwrite):
     admin_api_token = encrypt.get_api_token(admin, admin_password)
     user_id = gitlab.get_user_id(user, admin_api_token)
     user_api_token = create_impersonation_token(user_id, admin_api_token)
-    encrypt.store_encrypted_token(user, password, user_api_token)
+    try:
+        encrypt.store_encrypted_token(user, password, user_api_token, overwrite=overwrite)
+    except FileExistsError as e:
+        term.secho(f"Error storing token for user {user}: {e}", fg="red")
+
 
 @password.command('change')
 @click.option('--user', prompt=True, help='User name')
@@ -189,7 +194,7 @@ def change_password(user, password, new_password, new_password_repeat):
         term.secho("New passwords do not match. Password not changed.")
         click.Abort()
     api_token = encrypt.get_api_token(user, password)
-    encrypt.store_encrypted_token(user, new_password, api_token)
+    encrypt.store_encrypted_token(user, new_password, api_token, overwrite=True)
 
 
 
@@ -219,7 +224,20 @@ def token():
 def set_token(user, password, api_token):
     """Stores an encrypted token for the user.
     """
-    encrypt.store_encrypted_token(user, password, api_token)
+    encrypt.store_encrypted_token(user, password, api_token, overwrite=True)
+
+
+
+# import pandas as pd
+# with open('users.tsv', 'w') as f:
+#     for line in f:
+#         user_name, user_password = line.split()
+#         try:
+#             token = encrypt.get_api_token(user_name, user_password)
+#             print(f"Toke for '{user_name}' already exists")
+#         except FileNotFoundError as e:
+#            utils.run_cmd(f"franklin password --user {user_name} --password {user_password}")
+#         print(f"Created token for '{user_name}'")
 
 
 @token.command('get')
@@ -230,17 +248,6 @@ def get_token(user, password):
     """
     api_token = encrypt.get_api_token(user, password)
     term.echo(f'Stored personal access token: {api_token}')
-
-
-
-# password set
-# password get
-# password change
-
-
-
-
-
 
 
 @click.command()
@@ -352,9 +359,22 @@ def grant_prof_role(user_name, user, password, course=None):
     """
     listed_course_name = None
     if course is None:
-        course, listed_course_name = gitlab.pick_course()
-    
+        course, listed_course_name = gitlab.pick_course()    
     update_permissions(user_name, 'prof', course, listed_course_name, user, password)
+
+#     create_impersonation_token(gitlab.get_user_id(user_name, encrypt.get_api_token(user, password)))
+
+
+# #    generate_password = 
+#     if not user_exists()
+#         user_password = generate_password()
+#         set_password(user_name, user_password, admin, admin_password):
+
+#     print("CreatedUser: {user_name} Password: {user_password}")
+
+
+#set_password
+
 
 # @grant.command('admin')
 # @click.argument('user')
