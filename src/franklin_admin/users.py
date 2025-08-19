@@ -7,12 +7,12 @@ from pathlib import Path, PurePosixPath, PureWindowsPath
 from typing import Tuple, List, Dict, Callable, Any
 import requests
 
-from franklin import crash
-from franklin import config as cfg
-from franklin import utils
-from franklin import terminal as term
-from franklin import gitlab
-from franklin.logger import logger
+from franklin_cli import crash
+from franklin_cli import config as cfg
+from franklin_cli import utils
+from franklin_cli import terminal as term
+from franklin_cli import gitlab
+from franklin_cli.logger import logger
 from . import encrypt
 from franklin_educator import git
 
