@@ -247,7 +247,7 @@
 # # """
 # # FRANKLIN ADMIN TOKEN SET <TOKEN>
 # # initialize the auth db with the admin users 
-# # encrypt_for_admins(ADMIN_API_TOKEN, {"kasper": "banana"}, "secret.json")
+# # encrypt_for_admins(ADMIN_API_TOKEN, {"kasper": "asdfasdfasdf"}, "secret.json")
 
 # # FRNAKLIN GRANT TA <USER>
 # # add a user to a course with the appropriate role:

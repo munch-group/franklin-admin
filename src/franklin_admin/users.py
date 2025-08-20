@@ -150,13 +150,13 @@ def create_impersonation_token(user_id: int, admin_api_token: str):
         return None
 
 
-# @click.group(cls=utils.AliasedGroup)
-# def admin():
-#     """Admin commands for access control.
-#     """
-
-
 @click.group(cls=utils.AliasedGroup)
+def user():
+    """Admin commands for access control.
+    """
+
+
+@user.group(cls=utils.AliasedGroup)
 def password():
     """Admin commands for admin tokens.
     """
@@ -211,7 +211,7 @@ def change_password(user, password, new_password, new_password_repeat):
 
 
 
-@click.group(cls=utils.AliasedGroup)
+@user.group(cls=utils.AliasedGroup)
 def token():
     """Admin commands for admin tokens.
     """
@@ -250,7 +250,7 @@ def get_token(user, password):
     term.echo(f'Stored personal access token: {api_token}')
 
 
-@click.command()
+@user.command()
 @click.option('--user', prompt=True, help='User name')
 @click.option('--password', prompt=True, hide_input=True, help='Password')
 @click.argument("query", nargs=-1)
@@ -309,7 +309,7 @@ def finger(query, user, password):
     term.echo()
 
 
-@click.group(cls=utils.AliasedGroup)
+@user.group(cls=utils.AliasedGroup)
 def grant():
     """Commands for granting/revoking user permissions.
     """

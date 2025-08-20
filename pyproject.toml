@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "franklin-admin"
-version = "0.1.32"
+version = "0.1.33"
 classifiers = [
   "Development Status :: 4 - Beta",
   "Intended Audience :: Education",
@@ -42,10 +42,11 @@ Issues = "https://github.com/munch-group/franklin-admin/issues"
 where = ["src"]
 
 [project.entry-points."franklin_cli.plugins"]
-password = "franklin_admin.users:password"
-token = "franklin_admin.users:token"
-finger = "franklin_admin.users:finger"
-grant = "franklin_admin.users:grant"
+user = "franklin_admin.users:user"
+# password = "franklin_admin.users:password"
+# token = "franklin_admin.users:token"
+# finger = "franklin_admin.users:finger"
+# grant = "franklin_admin.users:grant"
 
 [tool.setuptools.package-data]
 franklin_admin = [
