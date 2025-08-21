@@ -42,6 +42,28 @@ permission_levels['inst'] = permission_levels['ta']
 
 
 
+def invite_user_with_permissions(user_email: str, group_id: int, access_level: int, api_token: str):
+
+    members: Dict[int, Any] = gitlab.get_group_members(group_id, api_token)
+    logger.debug('existing members {members}')
+
+    headers = {"PRIVATE-TOKEN": api_token, "Content-Type": "application/json"}
+
+    logger.debug(f'Email user invitation to {user_email} to group {group_id} with access {access_level}')
+
+    url = f"https://{cfg.gitlab_domain}/api/v4/groups/{group_id}/invitations"
+    response = requests.post(url, headers=headers, json={
+        "email": user_email,
+        "access_level": access_level
+    })
+    response.raise_for_status()
+    # if response.status_code == 200:
+
+    print("Member added and permissions set successfully.")
+    # else:
+    #     print(f"Error {response.status_code}: {response.json()}")
+
+
 def update_group_permissions(user_id: int, group_id: int, access_level: int, api_token: str):
 
     members: Dict[int, Any] = gitlab.get_group_members(group_id, api_token)
@@ -77,11 +99,35 @@ def update_group_permissions(user_id: int, group_id: int, access_level: int, api
             print(f"Error {response.status_code}: {response.json()}")
 
 
-def update_permissions(user_name, role, course, listed_course_name, user, password, project=None):
+def invite_user(user_email, role, course, listed_course_name, api_token, project=None):
 
-    api_token: str = encrypt.get_api_token(user, password)
+    group_id: int = gitlab.get_group_id(cfg.gitlab_group, api_token)
+    subgroup_id: int = gitlab.get_group_id(course, api_token)
 
-    user_id: int = gitlab.get_user_id(user_name, api_token)
+    # term.echo(f"Updating permissions for user '{user_name}' "
+    #           f"({get_user_info(user_id, api_token)['name']}) "
+    #           f"with role '{role}' in course '{listed_course_name}' "
+    #           f"(repo: {course}).")
+    term.secho()
+    term.secho(f"Email user invitation")
+    term.secho(f'To user:')
+    term.secho(f"  email: {user_email} ", fg='green')
+    term.secho(f'as:')
+    term.secho(f"  {role}", fg='green')
+    term.secho(f'for course:')
+    name = f', ({listed_course_name})' if listed_course_name else ''
+    term.secho(f'  {course}' + name, fg='green')
+    term.secho()
+    click.confirm("Do you want to continue?", abort=True, default=True)
+
+    group_perm, subgroup_perm, project_perm = permission_levels[role]
+
+    invite_user_with_permissions(user_email, group_id, group_perm, api_token)
+    invite_user_with_permissions(user_email, subgroup_id, subgroup_perm, api_token)
+
+
+def update_permissions(user_id, role, course, listed_course_name, api_token, project=None):
+
     group_id: int = gitlab.get_group_id(cfg.gitlab_group, api_token)
     subgroup_id: int = gitlab.get_group_id(course, api_token)
 
@@ -92,7 +138,7 @@ def update_permissions(user_name, role, course, listed_course_name, user, passwo
     term.secho()
     term.secho(f"Granting access to")
     term.secho(f'To user:')
-    term.secho(f"  {user_name} ({gitlab.get_user_info(user_id, api_token)['name']})", fg='green')
+    term.secho(f"  {user_id} ({gitlab.get_user_info(user_id, api_token)['name']})", fg='green')
     term.secho(f'as:')
     term.secho(f"  {role}", fg='green')
     term.secho(f'for course:')
@@ -314,53 +360,104 @@ def grant():
     """Commands for granting/revoking user permissions.
     """
 
+def _grant_role(role, admin, password, user_name=None, user_email=None, course=None):
 
-@grant.command('guest')
-@click.argument('user_name')
-@click.option('--user', prompt=True, help='Admin user')
-@click.option('--password', prompt=True, hide_input=True, help='Admin password')
-@click.option('--course', '-c', required=False, help='Course name')
-@crash.crash_report
-@git.gitlab_ssh_access
-def grant_ta_role(user_name, user, password, course=None):
-    """Grant guest permissions to a user (read only).
-    """
+    api_token: str = encrypt.get_api_token(admin, password)
+
+    user_id = None
+    if user_name is not None:
+        user_id = gitlab.get_user_id(user_name, api_token)
+
+    if not user_id and not user_email:
+        term.secho("User not found and no email provided for invite.", fg='red')
+        sys.exit(1)
+
     listed_course_name = None
     if course is None:
         course, listed_course_name = gitlab.pick_course()
-    update_permissions(user_name, 'guest', course, listed_course_name, user, password)
+
+    if user_id is None:
+        if user_email is None:
+            term.secho("User not found and no email provided for invite.", fg='red')
+            sys.exit(1)
+        invite_user(user_email, role, course, listed_course_name, api_token)
+    else:
+        update_permissions(user_id, role, course, listed_course_name, api_token)
+
+
+@grant.command('guest')
+@click.option('--admin', prompt=True, help='Admin user')
+@click.option('--password', prompt=True, hide_input=True, help='Admin password')
+@click.option('--course', '-c', required=False, help='Course name')
+@click.option('--user-name', '-u', required=False, help='Username')
+@click.option('--user-email', '-e', required=False, help='User email for invite')
+@crash.crash_report
+@git.gitlab_ssh_access
+def grant_ta_role(admin, password, user_name=None, user_email=None, course=None):
+    """Grant guest permissions to a user (read only).
+    """
+    _grant_role("guest", admin=admin, password=password, user_name=user_name, user_email=user_email, course=course)
 
 
 @grant.command('ta')
-@click.argument('user_name')
-@click.option('--user', prompt=True, help='Admin user')
+@click.option('--admin', prompt=True, help='Admin user')
 @click.option('--password', prompt=True, hide_input=True, help='Admin password')
 @click.option('--course', '-c', required=False, help='Course name')
+@click.option('--user-name', '-u', required=False, help='Username')
+@click.option('--user-email', '-e', required=False, help='User email for invite')
 @crash.crash_report
 @git.gitlab_ssh_access
-def grant_ta_role(user_name, user, password, course=None):
-    """Grant TA permissions to a user.
+def grant_ta_role(admin, password, user_name=None, user_email=None, course=None):
+    """Grant guest permissions to a user (read only).
     """
-    listed_course_name = None
-    if course is None:
-        course, listed_course_name = gitlab.pick_course()
-    update_permissions(user_name, 'ta', course, listed_course_name, user, password)
+    _grant_role("ta", admin=admin, password=password, user_name=user_name, user_email=user_email, course=course)
 
 
 @grant.command('prof')
-@click.argument('user_name')
-@click.option('--user', prompt=True, help='Admin user')
+@click.option('--admin', prompt=True, help='Admin user')
 @click.option('--password', prompt=True, hide_input=True, help='Admin password')
 @click.option('--course', '-c', required=False, help='Course name')
+@click.option('--user-name', '-u', required=False, help='Username')
+@click.option('--user-email', '-e', required=False, help='User email for invite')
 @crash.crash_report
 @git.gitlab_ssh_access
-def grant_prof_role(user_name, user, password, course=None):
-    """Grant course responsible permissions to a user.
+def grant_ta_role(admin, password, user_name=None, user_email=None, course=None):
+    """Grant guest permissions to a user (read only).
     """
-    listed_course_name = None
-    if course is None:
-        course, listed_course_name = gitlab.pick_course()    
-    update_permissions(user_name, 'prof', course, listed_course_name, user, password)
+    _grant_role("prof", admin=admin, password=password, user_name=user_name, user_email=user_email, course=course)
+
+
+# @grant.command('ta')
+# @click.argument('user_name')
+# @click.option('--user', prompt=True, help='Admin user')
+# @click.option('--password', prompt=True, hide_input=True, help='Admin password')
+# @click.option('--course', '-c', required=False, help='Course name')
+# @crash.crash_report
+# @git.gitlab_ssh_access
+# def grant_ta_role(user_name, user, password, course=None):
+#     """Grant TA permissions to a user.
+#     """
+#     listed_course_name = None
+#     if course is None:
+#         course, listed_course_name = gitlab.pick_course()
+#     update_permissions(user_name, 'ta', course, listed_course_name, user, password)
+
+
+# @grant.command('prof')
+# @click.argument('user_name')
+# @click.option('--user', prompt=True, help='Admin user')
+# @click.option('--password', prompt=True, hide_input=True, help='Admin password')
+# @click.option('--course', '-c', required=False, help='Course name')
+# @crash.crash_report
+# @git.gitlab_ssh_access
+# def grant_prof_role(user_name, user, password, course=None):
+#     """Grant course responsible permissions to a user.
+#     """
+#     listed_course_name = None
+#     if course is None:
+#         course, listed_course_name = gitlab.pick_course()    
+#     update_permissions(user_name, 'prof', course, listed_course_name, user, password)
+
 
 #     create_impersonation_token(gitlab.get_user_id(user_name, encrypt.get_api_token(user, password)))
 
