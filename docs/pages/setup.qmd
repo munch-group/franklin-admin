@@ -577,6 +577,6 @@ After completing setup:
 For setup assistance:
 
 - **Documentation**: [Admin Guide](index.qmd)
-- **Community Forum**: [GitHub Discussions](https://github.com/munch-group/franklin/discussions)
-- **Issue Tracker**: [GitHub Issues](https://github.com/munch-group/franklin/issues)
+- **Community Forum**: [GitHub Discussions](https://github.com/munch-group/franklin_cli/discussions)
+- **Issue Tracker**: [GitHub Issues](https://github.com/munch-group/franklin_cli/issues)
 - **Email Support**: admin-support@franklin.edu
